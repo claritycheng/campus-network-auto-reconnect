@@ -1,5 +1,9 @@
 const ids=['url','enabled','refreshOnline','loginSelector','onlineSelector','passwordSelector'];
 const el=id=>document.getElementById(id);
+el('diagnose').addEventListener('click',async()=>{
+ try{const result=await chrome.runtime.sendMessage({type:'diagnose'});el('status').textContent=result?.status||'未返回检查结果 / No result';}
+ catch(error){el('status').textContent='请重新加载扩展 / Reload extension: '+error.message;}
+});
 chrome.storage.local.get('config').then(({config})=>{
  if(!config)return;
  for(const id of ids){if(el(id).type==='checkbox')el(id).checked=!!config[id];else el(id).value=config[id]||'';}

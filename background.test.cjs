@@ -4,7 +4,7 @@ const fs=require('node:fs');
 const config=require('./config.js').validate({url:'https://portal.example/login/index.html',enabled:true,refreshOnline:true});
 const events={};let injections=0,reloads=0;
 const event=name=>({addListener:fn=>events[name]=fn});
-const chrome={alarms:{create:async()=>{},onAlarm:event('alarm')},runtime:{onInstalled:event('installed'),onStartup:event('startup'),openOptionsPage(){ }},action:{onClicked:event('action')},permissions:{contains:async()=>true},storage:{local:{get:async()=>({config})},onChanged:event('storage')},scripting:{executeScript:async()=>injections++},tabs:{query:async()=>[{id:1,url:config.url,status:'complete'}],sendMessage:async()=>({online:true}),reload:async()=>{reloads++;events.load(1,{status:'complete'},{url:config.url});},onUpdated:event('load')}};
+const chrome={alarms:{create:async()=>{},onAlarm:event('alarm')},runtime:{onMessage:event('message'),onInstalled:event('installed'),onStartup:event('startup'),openOptionsPage(){ }},action:{onClicked:event('action')},permissions:{contains:async()=>true},storage:{local:{get:async()=>({config})},onChanged:event('storage')},scripting:{executeScript:async()=>injections++},tabs:{query:async()=>[{id:1,url:config.url,status:'complete'}],sendMessage:async()=>({online:true}),reload:async()=>{reloads++;events.load(1,{status:'complete'},{url:config.url});},onUpdated:event('load')}};
 const ctx=vm.createContext({chrome,console,importScripts(){},PortalConfig:require('./config.js')});
 vm.runInContext(fs.readFileSync('background.js','utf8'),ctx);
 async function flush(){for(let i=0;i<30;i++)await Promise.resolve();}

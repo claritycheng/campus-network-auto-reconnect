@@ -8,18 +8,26 @@ function schedule(refresh=false){
 }
 async function checkPortal(refresh){
  const {config}=await chrome.storage.local.get('config');
- if(!config?.enabled)return;
+ if(!config?.enabled)return {status:'未启用或尚未保存配置 / Disabled or not configured'};
  const c=PortalConfig.validate(config),pattern=PortalConfig.pattern(c.url);
- if(!await chrome.permissions.contains({origins:[pattern]}))return;
+ if(!await chrome.permissions.contains({origins:[pattern]}))return {status:'缺少站点授权，请重新保存并授权 / Site permission missing'};
  const tabs=await chrome.tabs.query({url:pattern});
  const tab=tabs.find(t=>t.url&&PortalConfig.matches(t.url,c.url)&&t.status!=='loading');
- if(!tab)return;
+ if(!tab)return {status:'找不到匹配的已加载认证页，请核对网址并打开认证页 / No matching loaded portal tab'};
  await chrome.scripting.executeScript({target:{tabId:tab.id},files:['content.js']});
  const result=await chrome.tabs.sendMessage(tab.id,{type:'check',config:c});
  // Only the minute alarm may refresh. A completed load restores the badge
  // without refreshing again, preventing an endless reload loop.
  if(result?.online&&c.refreshOnline&&refresh)await chrome.tabs.reload(tab.id);
+ return {status:result?.reason ? '配置状态 / Configuration: '+result.reason : result?.online ? '已识别登录状态，提示已显示 / Signed in; badge displayed' : '已检查认证页，请查看左下角提示 / Portal checked; see badge'};
 }
+chrome.runtime.onMessage.addListener((message,sender,reply)=>{
+ if(message.type!=='diagnose')return;
+ pending=pending.then(()=>checkPortal(false));
+ pending.then(reply,error=>reply({status:'检查失败 / Check failed: '+error.message}));
+ pending=pending.catch(()=>{});
+ return true;
+});
 chrome.runtime.onInstalled.addListener(()=>{setup();chrome.runtime.openOptionsPage();schedule();});
 chrome.runtime.onStartup.addListener(()=>{setup();schedule();});
 chrome.action.onClicked.addListener(()=>chrome.runtime.openOptionsPage());

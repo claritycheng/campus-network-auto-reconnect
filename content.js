@@ -16,7 +16,9 @@
  busy=true;
  try{
  const {config}=await chrome.storage.local.get('config');
- if(!config?.enabled||JSON.stringify(config)!==JSON.stringify(c))return {online:false};
+ if(!config?.enabled)return {online:false,reason:'disabled'};
+ // Compare values, not serialization order: storage can reorder object keys.
+ if(['enabled','url','refreshOnline','loginSelector','onlineSelector','passwordSelector'].some(key=>config[key]!==c[key]))return {online:false,reason:'stale-config'};
  const u=new URL(c.url);
  if(location.origin!==u.origin||!location.pathname.startsWith(u.pathname.slice(0,u.pathname.lastIndexOf('/')+1)))return {online:false};
  const online=c.onlineSelector?select(c.onlineSelector):buttons().find(e=>/^(注销|退出登录|登出|logout|signout|logoff)$/.test(label(e)));

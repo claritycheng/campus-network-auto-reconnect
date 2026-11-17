@@ -16,7 +16,9 @@ async function scenario({online=false,captcha=false,error=false,password='filled
  const pass={type:'password',value:password,getClientRects:()=>[{}]};
  const cap={type:'text',name:'captcha',getClientRects:()=>[{}]};
  const c=C.validate({url:'https://portal.example/login/index.html',enabled,loginSelector:custom?'#custom':''});
- const data={config:c,attemptsByPortal:{'https://portal.example/login/index.html':attempts}};
+ // Chrome storage may return object keys in a different order.
+ const stored=Object.fromEntries(Object.entries(c).sort(([a],[b])=>a.localeCompare(b)));
+ const data={config:stored,attemptsByPortal:{'https://portal.example/login/index.html':attempts}};
  const doc={body:{innerText:error?'Authentication failed':''},getElementById:()=>null,createElement:()=>({style:{}}),documentElement:{append(){}},querySelectorAll:s=>s==='input'?(captcha?[pass,cap]:[pass]):s.startsWith('button')?[button]:s==='#custom'?[button]:[]};
  const context=vm.createContext({URL,Date,console,document:doc,location:{origin:'https://portal.example',pathname:'/login/index.html'},chrome:{storage:{local:{get:async()=>data,set:async value=>Object.assign(data,value)}},runtime:{onMessage:{addListener:fn=>listener=fn}}}});
  vm.runInContext(source,context);
