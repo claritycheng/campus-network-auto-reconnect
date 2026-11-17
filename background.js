@@ -14,7 +14,12 @@ async function checkPortal(refresh){
  const tabs=await chrome.tabs.query({url:pattern});
  const tab=tabs.find(t=>t.url&&PortalConfig.matches(t.url,c.url)&&t.status!=='loading');
  if(!tab)return {status:'找不到匹配的已加载认证页，请核对网址并打开认证页 / No matching loaded portal tab'};
+ try {
  await chrome.scripting.executeScript({target:{tabId:tab.id},files:['content.js']});
+ } catch(error) {
+ if(/Cannot access contents|permission/i.test(error.message))return {status:'Chrome 拒绝读取认证页。请在设置页点击“重置此站点授权”，再点击“保存并授权站点”，允许后刷新认证页。若仍失败，请提供扩展版本和下列错误。/ Chrome denied page access. Reset site permission, save and allow again, then refresh the portal.\n'+error.message};
+ throw error;
+ }
  const result=await chrome.tabs.sendMessage(tab.id,{type:'check',config:c});
  // Only the minute alarm may refresh. A completed load restores the badge
  // without refreshing again, preventing an endless reload loop.

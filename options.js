@@ -1,5 +1,12 @@
 const ids=['url','enabled','refreshOnline','loginSelector','onlineSelector','passwordSelector'];
 const el=id=>document.getElementById(id);
+el('resetPermission').addEventListener('click',async()=>{
+ try{
+ const config=PortalConfig.validate({url:el('url').value});
+ await chrome.permissions.remove({origins:[PortalConfig.pattern(config.url)]});
+ el('status').textContent='已撤销此站点的旧授权。请点击“保存并授权站点”，允许访问，再刷新认证页并诊断。/ Old grant removed. Click Save & allow site, approve access, refresh the portal and check again.';
+ }catch(error){el('status').textContent=error.message;}
+});
 el('diagnose').addEventListener('click',async()=>{
  try{const result=await chrome.runtime.sendMessage({type:'diagnose'});el('status').textContent=result?.status||'未返回检查结果 / No result';}
  catch(error){el('status').textContent='请重新加载扩展 / Reload extension: '+error.message;}
