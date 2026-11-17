@@ -1,14 +1,8 @@
 {
-  "manifest_version": 3,
-  "name": "校园网自动重连（本机专用）",
-  "version": "1.0.0",
-  "description": "仅在指定校园网认证页检查状态，使用浏览器已填入的信息点击登录。",
-  "permissions": ["alarms", "storage"],
-  "host_permissions": ["https://192.168.0.9/*"],
-  "background": { "service_worker": "background.js" },
-  "content_scripts": [{
-    "matches": ["https://192.168.0.9/portal/local/*"],
-    "js": ["content.js"],
-    "run_at": "document_idle"
-  }]
+ "manifest_version":3,"name":"校园网自动重连 / Portal Auto Reconnect","version":"2.0.0",
+ "description":"Configurable captive portal reconnection / 可配置网址的认证网络自动重连",
+ "permissions":["alarms","storage","scripting"],
+ "optional_host_permissions":["http://*/*","https://*/*"],
+ "background":{"service_worker":"background.js"},"options_page":"options.html",
+ "action":{"default_title":"设置 / Settings"}
 }

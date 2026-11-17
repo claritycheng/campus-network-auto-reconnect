@@ -1,91 +1,76 @@
-# 校园网自动重连 · Campus Network Auto Reconnect
+# 校园网自动重连 · Portal Auto Reconnect
 
-用于校园网认证会话到期后辅助重新登录的 Chrome 扩展。适合需要定时重新认证、登录超时后重新连接的校园网场景。
+可配置网址的 Chrome 扩展，辅助校园网、酒店或公共 Wi-Fi 网页认证在会话到期后重新登录。
+A configurable Chrome extension to assist with reconnecting web-based campus, hotel and public Wi-Fi captive portals after session expiry.
 
-A Chrome extension that assists with signing in again when a campus network captive portal session expires.
+## 中文
 
-[中文说明](#中文说明) · [English](#english)
+### 安装与设置
 
-## 中文说明
+1. 在本仓库选择 **Code → Download ZIP**，解压到固定文件夹。
+2. 打开 `chrome://extensions`，启用开发者模式，点击“加载已解压的扩展程序”，选择含 `manifest.json` 的文件夹。
+3. 点击扩展图标打开中英文设置页，输入自己网络的**完整认证网址**，勾选启用，点击“保存并授权站点”。没有预设学校地址，无需改源码。
+4. 点击“打开认证页”，正常登录，让浏览器填入登录信息。保持浏览器和认证标签页打开、电脑唤醒；一分钟内开始检查。
+5. 如果认证页面只有刷新后才显示掉线，可启用“已登录时每分钟刷新”。默认关闭，避免刷新影响页面使用。
 
-### 功能与适配范围
+### 功能
 
-- 每分钟检查一个已打开的认证标签页；检测到“注销”按钮时视为已登录，并刷新页面以更新状态。
-- 出现登录页面、密码框已填入且登录按钮可用时，自动点击登录。
-- 滚动一小时内最多尝试 3 次，两次提交至少间隔 2 分钟。
-- 检测到验证码输入框、已识别的认证错误或空密码框时，不自动提交。
-- 在页面左下角显示“校园网助手”状态提示。
+- 每分钟检查一个匹配认证页；范围为配置网址的同源（含端口）、同目录和子目录，查询参数不参与范围匹配。建议使用固定入口，不使用临时令牌链接。
+- 自动识别常见按钮：登录、登陆、立即登录、连接、Login、Sign in、Log on、Connect；通过注销、退出登录、登出、Log out、Sign out、Log off 判断已登录。
+- 页面不符合默认识别规则时，在高级设置填写登录按钮、已登录标记、密码框的 CSS 选择器，例如 `#login-button`。自定义标记必须仅在对应状态可见。
+- 浏览器已填入密码且按钮可用时点击登录；按认证地址限制每滚动小时最多 3 次，两次至少间隔 2 分钟。
+- 检测到常见验证码输入或认证错误时跳过提交，需手动处理。检测规则不能覆盖所有认证系统。
 
-**当前版本仅针对 `https://192.168.0.9:8002/portal/local/` 及其页面结构编写，并非所有校园网通用。** 它通过页面元素判断状态，不直接检测互联网连通性；不会延长认证时限。其他校园、酒店或公共 Wi-Fi 认证页面需要先适配。
+### 适用边界
 
-### 安装与使用
+这是**可配置的通用工具框架**，不是对所有认证协议的零配置支持。支持顶层页面中的普通账号密码表单；短信、扫码、SSO、多步登录、跨域 iframe、Shadow DOM 和特殊脚本认证可能需要额外适配。浏览器自动填充可能要求用户交互，不保证无人值守重连。
 
-1. 点击本仓库 **Code → Download ZIP**，解压到固定文件夹。
-2. 在 Chrome 地址栏打开 `chrome://extensions`，开启“开发者模式”。
-3. 点击“加载已解压的扩展程序”，选择包含 `manifest.json` 的文件夹。
-4. 打开校园网认证页面，正常登录；如需自动重连，让浏览器保存并填入登录信息。
-5. 刷新认证标签页，确认左下角出现“校园网助手”。保持 Chrome、认证标签页打开，并让电脑保持唤醒。
+通过页面标记推断登录状态，不直接检测互联网连通性，也不会延长网络时限。只处理已打开且匹配的标签页，不会重新创建关闭的认证页，也不会在浏览器关闭或电脑睡眠时运行。跨域重定向后的认证页需要配置其实际地址。
 
-浏览器自动填充可能需要用户交互，因此保存密码不保证能够无人值守重连。实际效果需在自然掉线后确认；使用远程连接时，避免主动注销网络测试。扩展不会在关闭 Chrome 后独立运行，也不会自动创建一个已被关闭的认证标签页。
+### 隐私与权限
 
-停用：在 `chrome://extensions` 中关闭或移除扩展。
+不保存或上传账号密码，无统计或外部服务。配置和重试时间戳存于本机。安装时不申请所有网站的访问权；保存设置时仅申请所填主机的权限。Chrome 站点授权不按端口限制，但实际运行还会检查端口和目录。旧站点授权可能保留，可在扩展管理页撤销。
 
-### 适配其他认证页面
+证书问题需手动处理。停用时在设置页取消“启用”并保存，或直接在扩展管理页关闭扩展。不要将含密码或令牌的认证网址、Cookie 上传到 Issues。
 
-| 文件 | 需要核对的内容 |
-| --- | --- |
-| `manifest.json` | `host_permissions` 和 `content_scripts.matches` 中的主机与路径 |
-| `background.js` | 完整认证地址、标签页匹配规则和端口检查 |
-| `content.js` | `location.origin`、登录/注销按钮文字、输入框和错误提示识别 |
+### 从 1.x 升级
 
-当前在线状态只识别中文“注销”按钮。登录按钮识别规则也需结合实际页面核对；本项目的中英文文档不代表已适配英文认证页面。修改后在扩展管理页重新加载扩展，再刷新认证页。
-
-### 数据与权限
-
-源码不包含账号或密码；扩展只检查密码框是否非空，然后点击页面按钮，不保存或上传密码。`storage` 用于保存重试时间戳，`alarms` 用于定时检查，站点权限限定认证主机。证书警告需要手动处理。
-
-反馈适配问题时，可通过 [Issues](https://github.com/claritycheng/campus-network-auto-reconnect/issues) 提供浏览器版本、现象和脱敏后的页面结构；请勿提交账号、密码、Cookie 或令牌。
+在扩展管理页点击重新加载，打开设置页填写原有认证网址、启用并授权。旧版写死的网址不会自动迁移；新版默认未启用。若希望保留原来刷新已登录页面的行为，请手动勾选刷新选项。
 
 ## English
 
-### Features and compatibility
+### Install and configure
 
-- Checks one open portal tab every minute. A visible button labeled `注销` is treated as a signed-in state, and the page is refreshed to update its status.
-- Clicks the sign-in button when the password field is already filled and the button is available.
-- Limits attempts to three per rolling hour, with at least two minutes between submissions.
-- Skips automatic submission when it detects a CAPTCHA input, a recognized authentication error, or an empty password field.
-- Displays a status badge in the lower-left corner of the portal page.
+1. Select **Code → Download ZIP**, then extract to a permanent folder.
+2. Open `chrome://extensions`, enable **Developer mode**, select **Load unpacked**, and choose the folder containing `manifest.json`.
+3. Click the extension icon. Enter your **full portal URL**, enable reconnection, and select **Save & allow site**. No school URL is preset and no source editing is required.
+4. Select **Open portal**, sign in normally and let the browser fill your credentials. Keep the browser and portal tab open, and keep the computer awake. Checks start within a minute.
+5. Enable the optional signed-in page refresh if your portal needs a refresh to reveal session expiry. It is off by default.
 
-**This version targets `https://192.168.0.9:8002/portal/local/` and its specific page structure.** It infers status from page elements rather than testing internet connectivity. It does not extend the network session limit. Other campus, hotel, or public Wi-Fi captive portals require adaptation.
+### Behavior and customization
 
-### Installation and usage
+Checks one matching tab per minute. Matching is restricted to the configured origin (including port) and directory subtree; query parameters do not restrict matching. Use a stable entry URL without temporary tokens.
 
-1. Select **Code → Download ZIP** on this repository and extract it to a permanent folder.
-2. Open `chrome://extensions` in Chrome and enable **Developer mode**.
-3. Select **Load unpacked** and choose the folder containing `manifest.json`.
-4. Open your campus portal and sign in normally. For automatic reconnection, allow the browser to save and fill your login information.
-5. Refresh the portal tab and look for the status badge. Keep Chrome and the portal tab open, and keep the computer awake.
+Common Chinese and English sign-in/sign-out labels are recognized. For other layouts, specify CSS selectors for the sign-in button, signed-in indicator and password field under **Advanced**. Indicators must be visible only in the corresponding state.
 
-Autofill may require user interaction, so saved credentials do not guarantee unattended reconnection. Verify behavior after a natural session expiry. Avoid signing out to test while relying on a remote connection. The extension does not run independently after Chrome closes or recreate a portal tab that you have closed.
+The extension clicks sign-in only when the password field is filled and the button is available. Attempts are limited per portal URL to three per rolling hour, at least two minutes apart. Recognized CAPTCHAs and authentication errors require manual handling; detection is not exhaustive.
 
-To disable it, turn off or remove the extension at `chrome://extensions`.
+### Compatibility and limitations
 
-### Adapting another portal
+This is a **configurable general-purpose framework**, not zero-configuration support for every portal. It handles ordinary password forms in the top-level page. SMS, QR codes, SSO, multi-step login, cross-origin frames, Shadow DOM and special authentication scripts may require adaptation. Browser autofill may require interaction; unattended reconnection is not guaranteed.
 
-| File | Settings to review |
-| --- | --- |
-| `manifest.json` | Host permissions and content script URL patterns |
-| `background.js` | Full portal URL, tab URL pattern, and port check |
-| `content.js` | Origin check, sign-in/sign-out labels, inputs, and error detection |
+Status is inferred from page elements rather than an internet connectivity test. The extension does not extend session limits, recreate closed portal tabs, run after the browser closes, or operate during sleep. Configure the actual authentication address when a portal redirects to another origin.
 
-The current online-state detector only recognizes the Chinese sign-out label `注销`. Review sign-in matching against your actual page as well. Bilingual documentation does not mean English portals are already supported. After editing, reload the extension and refresh the portal tab.
+### Privacy, permissions and upgrades
 
-### Data and permissions
+No credentials are stored or uploaded, and there is no analytics or external service. Configuration and retry timestamps stay in local extension storage. Site access is requested only for the entered host when saving. Chrome host grants cover ports, while runtime checks additionally enforce the configured port and directory. Previous host grants may remain and can be revoked in extension settings.
 
-The source contains no account credentials. The extension checks whether the password field is nonempty and clicks the page button; it does not store or upload passwords. Local storage holds retry timestamps, alarms schedule checks, and host permissions are restricted to the portal host. Certificate warnings require manual handling.
+Handle certificate warnings manually. Disable reconnection in settings or disable the extension at `chrome://extensions`. Do not share credential/token-bearing URLs or cookies in issues.
 
-For compatibility requests, open an [issue](https://github.com/claritycheng/campus-network-auto-reconnect/issues) with your browser version, observed behavior, and sanitized page structure. Do not include credentials, cookies, or tokens.
+Upgrading from 1.x: reload the extension, enter your previous portal URL in settings, enable and grant access. The old hard-coded address is not migrated; version 2 starts unconfigured. Enable signed-in refresh manually if you want the previous refresh behavior.
 
----
+## Feedback / 反馈
 
-关键词 / Search terms: 校园网自动重连、校园网自动登录、校园网掉线、认证超时、定时重新认证、campus network auto reconnect, captive portal auto login, session timeout, Chrome extension.
+[Open an issue](https://github.com/claritycheng/campus-network-auto-reconnect/issues) with browser version, observed behavior and sanitized page structure. 请提供脱敏后的页面结构和现象，不要提交凭据。
+
+Keywords: 校园网自动重连、校园网自动登录、认证超时、公共 Wi-Fi、campus network auto reconnect, captive portal auto login, session timeout, configurable Chrome extension.

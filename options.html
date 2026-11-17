@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><title>认证网络重连 / Portal Reconnect</title>
+<link rel="stylesheet" href="options.css">
+<main><h1>认证网络重连<br><small>Portal Auto Reconnect</small></h1>
+<p>配置一次，保持认证标签页打开。特殊认证系统需要适配。<br>Configure once and keep the portal tab open. Special authentication systems may require adaptation.</p>
+<form id="settings">
+<label>认证页面完整网址 / Portal URL<input id="url" type="url" placeholder="https://portal.example.edu/login" required></label>
+<p>使用不含一次性令牌的固定入口。检查同源（含端口）、同目录及子目录。<br>Use a stable URL without temporary tokens. Checks cover the same origin, port and directory subtree.</p>
+<label><input id="enabled" type="checkbox"> 启用 / Enable auto reconnect</label>
+<label><input id="refreshOnline" type="checkbox"> 已登录时每分钟刷新 / Refresh signed-in page every minute</label>
+<p>刷新默认关闭；部分页面需刷新才能显示会话到期。<br>Refresh is off by default; some portals need it to reveal session expiry.</p>
+<details><summary>高级：可选 CSS 选择器 / Advanced: optional CSS selectors</summary>
+<label>登录按钮 / Sign-in button<input id="loginSelector" placeholder="#login-button"></label>
+<label>已登录标记 / Signed-in indicator<input id="onlineSelector" placeholder="#logout-button"></label>
+<label>密码框 / Password field<input id="passwordSelector" placeholder="input[type=password]"></label>
+<p>留空则识别常见中英文按钮。标记必须仅在对应状态可见。<br>Leave blank for common Chinese/English labels. Indicators must be visible only in the corresponding state.</p></details>
+<button type="submit">保存并授权站点 / Save &amp; allow site</button>
+<button type="button" id="open">打开认证页 / Open portal</button>
+<p id="status" role="status"></p></form>
+<p>不保存密码，使用浏览器已填入的信息。每小时最多提交 3 次，至少间隔 2 分钟。验证码和认证错误需手动处理。<br>No passwords stored. Uses browser-filled credentials. Up to 3 attempts per hour, at least 2 minutes apart. CAPTCHAs and authentication errors require manual handling.</p>
+</main><script src="config.js"></script><script src="options.js"></script></html>
