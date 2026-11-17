@@ -23,7 +23,14 @@ el('save').addEventListener('click',async()=>{
  el('status').textContent='已保存，授权已核验 / Saved; permission verified\n'+(result?.status||'未返回诊断 / No diagnostic result');
  }catch(error){el('status').textContent=error.message;}
 });
-el('open').addEventListener('click',()=>{
- try{const c=PortalConfig.validate({url:el('url').value});chrome.tabs.create({url:c.url});}
+el('open').addEventListener('click',async()=>{
+ try{
+ const c=PortalConfig.validate({url:el('url').value});
+ const tabs=await chrome.tabs.query({url:PortalConfig.pattern(c.url)});
+ const existing=tabs.filter(t=>t.url&&PortalConfig.matches(t.url,c.url)).sort((a,b)=>(b.lastAccessed||0)-(a.lastAccessed||0)||b.id-a.id)[0];
+ if(existing)await chrome.tabs.update(existing.id,{active:true});
+ else await chrome.tabs.create({url:c.url});
+ await chrome.runtime.sendMessage({type:'diagnose'});
+ }
  catch(error){el('status').textContent=error.message;}
 });

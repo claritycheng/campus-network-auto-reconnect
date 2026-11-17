@@ -15,7 +15,8 @@ async function checkPortal(refresh){
  return {status:'站点授权未生效 / Site permission not effective\n版本 / Version: '+chrome.runtime.getManifest().version+'\n所需规则 / Required: '+pattern+'\nChrome 已授予 / Granted: '+JSON.stringify(granted.origins||[])+'\n请保留此结果用于排查，不要重复重置权限。/ Keep this result; do not repeatedly reset permissions.'};
  }
  const tabs=await chrome.tabs.query({url:pattern});
- const tab=tabs.find(t=>t.url&&PortalConfig.matches(t.url,c.url)&&t.status!=='loading');
+ const tab=tabs.filter(t=>t.url&&PortalConfig.matches(t.url,c.url)&&t.status!=='loading')
+ .sort((a,b)=>Number(b.active)-Number(a.active)||(b.lastAccessed||0)-(a.lastAccessed||0)||b.id-a.id)[0];
  if(!tab)return {status:'找不到匹配的已加载认证页，请核对网址并打开认证页 / No matching loaded portal tab'};
  try {
  await chrome.scripting.executeScript({target:{tabId:tab.id},files:['content.js']});
