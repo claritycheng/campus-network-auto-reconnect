@@ -10,14 +10,20 @@ async function checkPortal(refresh){
  const {config}=await chrome.storage.local.get('config');
  if(!config?.enabled)return {status:'未启用或尚未保存配置 / Disabled or not configured'};
  const c=PortalConfig.validate(config),pattern=PortalConfig.pattern(c.url);
- if(!await chrome.permissions.contains({origins:[pattern]}))return {status:'缺少站点授权，请重新保存并授权 / Site permission missing'};
+ if(!await chrome.permissions.contains({origins:[pattern]})) {
+ const granted=await chrome.permissions.getAll();
+ return {status:'站点授权未生效 / Site permission not effective\n版本 / Version: '+chrome.runtime.getManifest().version+'\n所需规则 / Required: '+pattern+'\nChrome 已授予 / Granted: '+JSON.stringify(granted.origins||[])+'\n请保留此结果用于排查，不要重复重置权限。/ Keep this result; do not repeatedly reset permissions.'};
+ }
  const tabs=await chrome.tabs.query({url:pattern});
  const tab=tabs.find(t=>t.url&&PortalConfig.matches(t.url,c.url)&&t.status!=='loading');
  if(!tab)return {status:'找不到匹配的已加载认证页，请核对网址并打开认证页 / No matching loaded portal tab'};
  try {
  await chrome.scripting.executeScript({target:{tabId:tab.id},files:['content.js']});
  } catch(error) {
- if(/Cannot access contents|permission/i.test(error.message))return {status:'Chrome 拒绝读取认证页。请在设置页点击“重置此站点授权”，再点击“保存并授权站点”，允许后刷新认证页。若仍失败，请提供扩展版本和下列错误。/ Chrome denied page access. Reset site permission, save and allow again, then refresh the portal.\n'+error.message};
+ if(/Cannot access contents|permission/i.test(error.message)){
+ const granted=await chrome.permissions.getAll();
+ return {status:'Chrome 已报告授权，但拒绝读取页面 / Permission reported granted, but page access denied\n版本 / Version: '+chrome.runtime.getManifest().version+'\n所需规则 / Required: '+pattern+'\nChrome 已授予 / Granted: '+JSON.stringify(granted.origins||[])+'\n目标页面 / Target: '+new URL(tab.url).origin+'\n'+error.message};
+ }
  throw error;
  }
  const result=await chrome.tabs.sendMessage(tab.id,{type:'check',config:c});

@@ -1,5 +1,5 @@
 {
- "manifest_version":3,"name":"校园网自动重连 / Portal Auto Reconnect","version":"2.0.3",
+ "manifest_version":3,"name":"校园网自动重连 / Portal Auto Reconnect","version":"2.0.4",
  "description":"Configurable captive portal reconnection / 可配置网址的认证网络自动重连",
  "permissions":["alarms","storage","scripting"],
  "optional_host_permissions":["http://*/*","https://*/*"],
